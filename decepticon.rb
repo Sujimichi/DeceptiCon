@@ -1,8 +1,11 @@
 module DeceptiCon
+  
+  Actions = [:index, :show, :new, :create, :edit, :update, :destroy]
+  Formats = [:html, :ajax]
 
   def assert_mapping
-    formats = [:html, :ajax] #The formats which are accepted (will extend to include other :xml, :json etc soon).
-    @action_mapping.each do |action, mapping|  #action must be one of [:index, :show, :new, :create, :edit, :update, :destroy]
+    formats = Formats #The formats which are accepted (will extend to include other :xml, :json etc soon).
+    default_mapping.merge(@action_mapping).each do |action, mapping|  #action must be one of [:index, :show, :new, :create, :edit, :update, :destroy]
       #mapping must be a hash with {format => true/false} for each format, and optional args to be passed in with the params.  args can be on the keys :args or format_args where format is one of the allowed formats.
       object_class = @object  #@object is a class ie Entity or JvrModel.  
       #@object and @action_mapping should be defined in the controller which is being tested.
@@ -80,10 +83,13 @@ module DeceptiCon
     }
   end
 
+  def default_mapping
+    fmts = Formats.map{|format| {format => false} }.inject{|i,j| i.merge(j)}
+    Actions.map{|action| {action => fmts } }.inject{|i,j| i.merge(j)}
+  end
+
   def fetch format, action, *args
     @al ||= get_action_lookup
     @al[action][format].call(*args)
   end  
-
 end
-
