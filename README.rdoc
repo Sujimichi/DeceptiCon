@@ -18,7 +18,7 @@
   
 * You just want to test the basic `should be_success` or `should_not be_success` assertions for each action.
   * but your writting basically the same tests over and over for each controller and each action,
-  * and it takes at least 70 lines of controller_spec to test each action with each format, ie;
+  * and it takes at least 10 lines of controller_spec to test one action with two formats, ie;
 
       describe "show"
         it 'should be available with HTML' do
@@ -30,6 +30,7 @@
           response.should_not be_success
         end
       end
+    Which means a controller that tests each format of each action will be at least 70 lines long.
 
 * You just want to focus on the interesting behaviours of your controllers. 
 
