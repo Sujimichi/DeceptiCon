@@ -90,12 +90,8 @@ These should be defined inside a describe block, but *not* inside a +before+ or 
 <tt>@object</tt> is the class of the object for the current controller, ie Note for the NotesController.
     @object = Note
 
-<tt>@action_mapping</tt> is a hash with a key for each action which entails another hash which defines the formats which the action will <tt>respond_to<\tt> and the expection of the request.  
-
-  {:action => {:format => expectation of request}}
-
-The expectation of e request is either +true+ or +false+ to denote if the <tt>response.should be_succsess<\tt> or if the <tt>response.should_not be_succsess<\tt>. 
-
+<tt>@action_mapping</tt> is a hash with a key for each action which entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expection of the request; <tt>{:action => {:format => expectation of request}}</tt>.
+The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_succsess</tt> or if the <tt>response.should_not be_succsess</tt>. 
     @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
 
 
