@@ -1,12 +1,18 @@
 module DeceptiCon
   
   Actions = [:index, :show, :new, :create, :edit, :update, :destroy]
-  Formats = [:html, :ajax]
+  Formats = [:html, :ajax, :xml, :json] #:js and :ajax are synonymouse (and L is for dyslexcia)
 
   def assert_mapping
-    formats = Formats #The formats which are accepted (will extend to include other :xml, :json etc soon).
-    default_mapping.merge(@action_mapping).each do |action, mapping|  #action must be one of [:index, :show, :new, :create, :edit, :update, :destroy]
-      #mapping must be a hash with {format => true/false} for each format, and optional args to be passed in with the params.  args can be on the keys :args or format_args where format is one of the allowed formats.
+    formats = @test_formats #allow over-ride of formats to test
+    formats ||= $default_test_formats
+    formats ||= Formats #otherwise use default set.
+    defaults = default_mapping(formats) #get a default mapping for the given formats. Default has all expectations as false ie should_not be_success
+
+    Actions.each do |action| 
+      @action_mapping[action] ||= {} #in case action has not been supplied
+      mapping = defaults[action].merge(@action_mapping[action]) #merge supplied mapping for action over defaults for action
+      #mapping must be a hash with {format => true/false} for each format, and optional args to be passed in with the params.  args can be on the keys :args or <format>_args where format is one of the allowed formats.
       object_class = @object  #@object is a class ie Entity or JvrModel.  
       #@object and @action_mapping should be defined in the controller which is being tested.
 
@@ -15,6 +21,7 @@ module DeceptiCon
         next unless formats.include?(format) #do I even need to comment this line.  Ruby is basicaly runnable comments!
 
         it "should #{expected_outcome.eql?(false) ? 'NOT ' : '' }respond to #{action}:#{format}" do #Define an rspec test step
+
           request.env["HTTP_REFERER"] = "/" #set somewhere for :back to point at if any actions redirect_to :back
           #valid_obj = send("valid_#{class_name}") unless object_class.nil? #create a valid object for the object_class.  Assumes methods for each resourse ie valid_entity, valid_jvr_model etc. 
           valid_obj = get_valid_object_for_class(object_class, class_name) unless object_class.nil?
@@ -83,13 +90,21 @@ module DeceptiCon
     }
   end
 
-  def default_mapping
-    fmts = Formats.map{|format| {format => false} }.inject{|i,j| i.merge(j)}
+  def default_mapping(formats)
+    fmts = formats.map{|format| {format => false} }.inject{|i,j| i.merge(j)}
     Actions.map{|action| {action => fmts } }.inject{|i,j| i.merge(j)}
   end
 
   def fetch format, action, *args
+    format = :ajax if format.eql?(:js)
+    if [:json, :xml].include?(format)
+      @request.env['HTTP_ACCEPT'] = "application/#{format}"
+      format = :html
+    end
+
     @al ||= get_action_lookup
     @al[action][format].call(*args)
   end  
+
 end
+
