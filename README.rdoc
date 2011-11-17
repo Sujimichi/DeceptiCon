@@ -105,6 +105,7 @@ These should be defined inside a describe block, but *not* inside a +before+ or 
 <tt>@action_mapping</tt> is a hash with a key for each action.  Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expection of the request; <tt>{:action => {:format => expectation of request}}</tt>.
 The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_succsess</tt> or if the <tt>response.should_not be_succsess</tt>. 
     @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
+Any action which is not included will be considered to not have successful responses to either format.
 
 Add a call to a method provided by the DeceptiCon module after the <tt>@action_mapping</tt> definition
 
@@ -167,19 +168,11 @@ A controller spec which tests all seven actions, both html and js formats for th
 
     require 'spec_helper'
     
-    describe NotesController do
+    describe HelpDocumentsController do
       
       describe "Accessability by non-logged-in users" do 
         @object = HelpDocument
-        @action_mapping = {
-          :index => {:html => false,  :ajax => false}, 
-          :show =>  {:html => false,  :ajax => false},
-          :new =>   {:html => false,  :ajax => false},
-          :create =>{:html => false,  :ajax => false},
-          :edit =>  {:html => false,  :ajax => false},
-          :update =>{:html => false,  :ajax => false},
-          :destroy=>{:html => false,  :ajax => false}
-        }
+        @action_mapping = {  } #no mapping of actions => completly blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
     
@@ -187,17 +180,8 @@ A controller spec which tests all seven actions, both html and js formats for th
         before(:each) do 
           assume_logged_in_user
         end
-    
         @object = HelpDocument
-        @action_mapping = {
-          :index => {:html => false,  :ajax => false}, 
-          :show =>  {:html => false,  :ajax => false},
-          :new =>   {:html => false,  :ajax => false},
-          :create =>{:html => false,  :ajax => false},
-          :edit =>  {:html => false,  :ajax => false},
-          :update =>{:html => false,  :ajax => false},
-          :destroy=>{:html => false,  :ajax => false}
-        }
+        @action_mapping = {  } #no mapping of actions => completly blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
     
