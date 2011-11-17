@@ -4,14 +4,11 @@
 
 * Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
 * Your controller actions are conventional
-
-  :show, :edit, :update and :destroy  require :id in the params
-
-  :create requires attributes for the appropriate object
-
-  :update requires attributes for the appropriate object and an :id
-
-  :index does not need any params
+  
+    :show, :edit, :update and :destroy require :id in the params
+    :create requires attributes for the appropriate object
+    :update requires attributes for the appropriate object and an :id
+    :index does not need any params
 
 * Your controllers respond_to :html and :js (or others)
 
@@ -19,7 +16,7 @@
 
 * Your controller tests are so similar you get double vision looking at them
   * half the tests are identical across different controllers
-  * It takes 10 lines just to make a basic `should be_success` or `should_not be_success` assertion for one action;
+  * 10 lines just to make a basic `should be_success` or `should_not be_success` assertion for one action;
 
       describe "show"
         it 'should be available with HTML' do
