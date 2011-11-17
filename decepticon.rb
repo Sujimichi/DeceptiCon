@@ -1,44 +1,71 @@
 module DeceptiCon
 
-  def test_mapping
-    formats = [:html, :ajax]
+  def assert_mapping
+    formats = [:html, :ajax] #The formats which are accepted (will extend to include other :xml, :json etc soon).
     @action_mapping.each do |action, mapping|  #action must be one of [:index, :show, :new, :create, :edit, :update, :destroy]
-      object_class = @object  #@object is a class ie Entity or JvrModel
+      #mapping must be a hash with {format => true/false} for each format, and optional args to be passed in with the params.  args can be on the keys :args or format_args where format is one of the allowed formats.
+      object_class = @object  #@object is a class ie Entity or JvrModel.  
+      #@object and @action_mapping should be defined in the controller which is being tested.
+
       class_name = object_class.to_s.underscore
       mapping.each do |format, expected_outcome|
-
         next unless formats.include?(format) #do I even need to comment this line.  Ruby is basicaly runnable comments!
 
-        it "should #{expected_outcome.eql?(false) ? 'NOT ' : '' }respond to #{action}:#{format}" do #start an rspec test
+        it "should #{expected_outcome.eql?(false) ? 'NOT ' : '' }respond to #{action}:#{format}" do #Define an rspec test step
+          request.env["HTTP_REFERER"] = "/" #set somewhere for :back to point at if any actions redirect_to :back
+          #valid_obj = send("valid_#{class_name}") unless object_class.nil? #create a valid object for the object_class.  Assumes methods for each resourse ie valid_entity, valid_jvr_model etc. 
+          valid_obj = get_valid_object_for_class(object_class, class_name) unless object_class.nil?
 
-          request.env["HTTP_REFERER"] = "/" #set a link for :back to point at
-          valid_obj = send("valid_#{class_name}") unless object_class.nil? #create a valid object for the object_class.  Assumes methods for each resourse ie valid_entity, valid_jvr_model etc. 
-
+          params = {} #params is an empty hash by default.
           unless [:index, :new].include?(action) #only :index and create actions do not require an :id to be supplied
-            args = {:id => valid_obj.id} if valid_obj #set the id of the valid_object created.
-            args = {:id => 1} unless valid_obj && expected_outcome #If the controller is for a non DB resource (so no valid_obj) and the expected_outcome is false, then just use '1' for the :id
+            params = {:id => valid_obj.id} if valid_obj #set the id of the valid_object in the params
+            params = {:id => 1} unless valid_obj && expected_outcome #If the controller is for a non DB resource (so no valid_obj) and the expected_outcome is false, then just use '1' for the :id
           end
           if action.eql?(:create) #create requires that the params have the object included ie {:entity => {attributes} }
-            object_class.stub!(:new => valid_obj) if valid_obj#force the return of a valid object from new
-            args = {class_name.to_sym => object_class.new.attributes} unless object_class.nil? #include attributes for the object in the params 
+            object_class.stub!(:new => valid_obj) if valid_obj  #force the return of a valid object from Object.new
+            params = {class_name.to_sym => object_class.new.attributes} unless object_class.nil? #include attributes for the object in the params 
           end
           if action.eql?(:update) #upate requires both an :id and the object attributes to update.
-            args = {:id => valid_obj.id, class_name.to_sym => valid_obj.attributes} if valid_obj
-            #in some cases a :jvr_model_id is needed by some controllers update actions.  it is included here, and therefore sent to other controllers but they will ignore it if they dont need it.
+            params = {:id => valid_obj.id, class_name.to_sym => valid_obj.attributes} if valid_obj
           end
-          args ||= {}
 
           mapping[:args] ||= {}
           mapping[:args].merge!(mapping["#{format}_args".to_sym]) if mapping.has_key?("#{format}_args".to_sym) #merge mapping[:args] with args for format, ie: mapping[:ajax_args]
-
-          a_args = mapping[:args].map{|k,v| {k => (v.is_a?(String) ? eval(v) : v)} }.inject{|i,j| i.merge(j)} #args which are strings are eval'd.  This allows methods like with valid_object to be called here so they are in scope.
-          args.merge!(a_args) unless a_args.nil? #merge the args from mapping with the base args.
+          #args which are strings are eval'd.  this allows methods like with valid_object to be called here so they are in scope.
+          extra_params = mapping[:args].map{|k,v| {k => (v.is_a?(String) ? eval(v) : v)} }.inject{|i,j| i.merge(j)} 
+          params.merge!(extra_params) unless extra_params.nil? #merge the args from mapping with the base args.
           
-          fetch(format, action, args) #Call the request using fetch.  format is either :html or :ajax 
+          fetch(format, action, params) #Call the request using fetch.  format is either :html or :ajax, action is one of [:index, :show, :new, :create, :edit, :update, :destroy], params is a hash to supply in request.
           expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
         end
       end
     end
+  end
+
+  def get_valid_object_for_class object_class, class_name
+    begin
+      obj = send("valid_#{class_name}") #attempt to call a method valid_<class_name.underscore> which should return a Factory object, ie; valid_entity or valid_jvr_model 
+    rescue
+      begin
+        obj = Factory.build(class_name.to_sym, {}) #if a valid_<object> method was not found, try to use a Factory
+        obj.save
+      rescue
+        obj = nil
+      end
+    end
+    return obj if obj && obj.valid?
+
+    puts "Warning - Neither the method 'valid_#{class_name}' or a Factory for #{class_name} could be found.  Add a Factory to build a valid #{class_name}.  Will Attempt to construct object nativly" unless obj
+    puts "Warning - Factory generated #{class_name} was not valid.  #{class_name} must be valid, adjust your Factory.  Will add strings and integers to attributes to attempt to make valid" if obj
+      
+    obj ||= object_class.new
+    obj.valid?
+    obj.errors.each do |attr, err|
+      obj.send("#{attr.to_s}=", "a string") #attempt to add a string
+      obj.send("#{attr}=", 42) if obj.send("#{attr}").eql?(0) #or add an int if the string failed.
+    end
+    obj.valid? ? obj.save! : (raise "Unable to create a valid #{class_name}.  You must add a Factory or 'valid_#{class_name}' method.")
+    obj
   end
 
   def get_action_lookup
@@ -59,3 +86,4 @@ module DeceptiCon
   end  
 
 end
+
