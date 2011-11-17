@@ -116,15 +116,58 @@ Finally (I know, this is a _lot_ of work) make sure you have a Factory ready for
   
 Now run your specs
 
+
+==Extending the params
+You can also pass in additional params to be added to the request, ie;
+
+   @action_mapping = {
+      :index => {:html => true,  :ajax => false, :html_args => {:limit => 5} },
+      :show =>  {:html => true,  :ajax => false},
+      :new =>   {:html => false, :ajax => true,  :ajax_args => {:published => false} },
+      :create =>{:html => true,  :ajax => true,  :args => {:assign_to_user => "valid_user.id"}, :ajax_args => {:preview => true} }, 
+      :edit =>  {:html => false, :ajax => true},
+      :update =>{:html => true,  :ajax => true},
+      :destroy=>{:html => false, :ajax => false},
+    }
+
+Additional params supplied with the key :args will be included in requests to all formats.  
+To include params for specific formats use the key :<format>_args, ie <tt>:html_args</tt>.
+
+Note the args being passed to the create action; <tt>:args => {:user_id => "valid_user.id"}</tt>.
+The <tt>valid_user.id</tt> is a string not a method or variable.  Before additional params are added any which are strings are eval'd.  
+This allows them to be called in the scope of the test (could not make work with Procs).  Its not ideal.
+
+==Other Stuff
+As well as the main +assert_mapping+ method the DeceptiCon class also provides another method called +fetch+.
+This is used to unify the way you make requests to different formats.
+
+For example to make html requests you write;
+    get :index
+    post :update, params
+
+To make js requests you write;
+    xhr :get, :index
+    xhr :post, :update, params
+
+So now you can write 
+    fetch :html, :index
+    fetch :ajax, :index
+    fetch :html, :update, params
+    fetch :ajax, :update, params
+
+
+
+
 Still a work in progress.  More changes and more docs to come.
 Currently only supports :html and :js formats but the others can be added easily.  
 
 
 ==Example Controller Spec
+A controller spec which tests all seven actions, both html and js formats for three different types of User.
 
     require 'spec_helper'
     
-    describe HelpDocumentsController do
+    describe NotesController do
       
       describe "Accessability by non-logged-in users" do 
         @object = HelpDocument
