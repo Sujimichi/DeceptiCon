@@ -77,6 +77,7 @@ For each of the actions it makes assumptions about what to include in the params
 * For :update the params include attributes for the object and an :id.
 * All other actions (:show, :edit, :destroy) just get an :id.
 
+The generation of the tests is done by the +test_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).  It also has one prerequisite requirement of your test setup.  It needs to be able to call methods which return your Factory objects.  It assumes that for each class ie Note it can call a method ie +valid_note+ to return a valid object of that class.  
 
 
 ===How to make it work
