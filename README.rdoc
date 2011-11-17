@@ -81,13 +81,15 @@ The generation of the tests is done by the +assert_mapping+ method in the Decept
 
 ====Important Prerequisite
 In order for the generated tests to have :ids and object data in the params it needs to be able to create valid objects for the given class.
-The +assert_mapping+ method assumes that it will be able to call methods named <tt>valid_<class_name.underscore></tt>, ie +valid_note+.  
-It is the expectation that a valid_object method will return a Factory generated object which returns true for .valid?
-If such a method can't be found it will attempt to create an object and populate it attributes to make it valid but this is only very basic.
+If you have Factories set up for your classes it will use <tt>Factory.biuld(class_name)</tt>.
+It will also work if you have methods named valid_<class_name> ie +valid_note+ or +valid_user_comment+.  
+
+It is the expectation that the object returned by either the Factory the valid_object method will return true for .valid?
+If such a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this is only very basic.
 
 
 
-===How to make it work
+==Setup
 
 First put the 'decepticon.rb' file into your spec dir. Then require and include it in your spec_helper.rb (or in specific controller_spec)
   require 'decepticon'
@@ -98,16 +100,79 @@ These should be defined inside a describe block, but *not* inside a +before+ or 
 <tt>@object</tt> is the class of the object for the current controller, ie Note for the NotesController.
     @object = Note
 
-<tt>@action_mapping</tt> is a hash with a key for each action which entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expection of the request; <tt>{:action => {:format => expectation of request}}</tt>.
+<tt>@action_mapping</tt> is a hash with a key for each action.  Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expection of the request; <tt>{:action => {:format => expectation of request}}</tt>.
 The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_succsess</tt> or if the <tt>response.should_not be_succsess</tt>. 
     @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
 
-
-Finally (I know, this is a _lot_ of work) add a call to a method provided by the DeceptiCon module
+Add a call to a method provided by the DeceptiCon module after the <tt>@action_mapping</tt> definition
 
   assert_mapping
 
+Finally (I know, this is a _lot_ of work) make sure you have a Factory ready for the given object class
+  
+  Factory.define(:note) { |f| f.text "some text" }
+  
+Now run your specs
 
 Still a work in progress.  More changes and more docs to come.
 Currently only supports :html and :js formats but the others can be added easily.  
 
+
+==Example Controller Spec
+
+    require 'spec_helper'
+    
+    describe HelpDocumentsController do
+      
+      describe "Accessability by non-logged-in users" do 
+        @object = HelpDocument
+        @action_mapping = {
+          :index => {:html => false,  :ajax => false}, 
+          :show =>  {:html => false,  :ajax => false},
+          :new =>   {:html => false,  :ajax => false},
+          :create =>{:html => false,  :ajax => false},
+          :edit =>  {:html => false,  :ajax => false},
+          :update =>{:html => false,  :ajax => false},
+          :destroy=>{:html => false,  :ajax => false}
+        }
+        assert_mapping
+      end
+    
+      describe "Accessability by logged-in users without roles" do 
+        before(:each) do 
+          assume_logged_in_user
+        end
+    
+        @object = HelpDocument
+        @action_mapping = {
+          :index => {:html => false,  :ajax => false}, 
+          :show =>  {:html => false,  :ajax => false},
+          :new =>   {:html => false,  :ajax => false},
+          :create =>{:html => false,  :ajax => false},
+          :edit =>  {:html => false,  :ajax => false},
+          :update =>{:html => false,  :ajax => false},
+          :destroy=>{:html => false,  :ajax => false}
+        }
+        assert_mapping
+      end
+    
+      describe "Accessability by logged-in users with admin role" do 
+        before(:each) do 
+          assume_logged_in_user
+          @current_user.add_role :admin
+        end
+    
+        @object = HelpDocument
+        @action_mapping = {
+          :index => {:html => true,  :ajax => false}, 
+          :show =>  {:html => false, :ajax => false},
+          :new =>   {:html => false, :ajax => false},
+          :create =>{:html => true,  :ajax => false},
+          :edit =>  {:html => true,  :ajax => false},
+          :update =>{:html => true,  :ajax => true},
+          :destroy=>{:html => true,  :ajax => false}
+        }
+        assert_mapping
+      end
+    
+    end
