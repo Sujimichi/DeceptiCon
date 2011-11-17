@@ -62,7 +62,7 @@ Here is a controller spec which tests each of the seven actions, each with eithe
 
 ===What's going on here then?
 
-For each of the seven controller actions in <tt>@action_mapping<\tt> a test has been created for each of its two formats.  
+For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of its two formats.  
 Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
 
 ====example of generated tests
