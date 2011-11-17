@@ -1,4 +1,5 @@
 =DeceptiCon
+A DRY way to simplfy your Rails controller tests.  
 
 ==Does this apply to you?
 
@@ -17,8 +18,8 @@
 * Your controller tests are so similar you get double vision looking at them
   
 * You just want to test the basic `should be_success` or `should_not be_success` assertions for each action.
-  * but your writting basically the same tests over and over for each controller and each action,
-  * and it takes at least 10 lines of controller_spec to test one action with two formats, ie;
+  * but your writing basically the same tests over and over for each controller and each action,
+  * and it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
 
       describe "show"
         it 'should be available with HTML' do
@@ -34,7 +35,7 @@
 
 * You just want to focus on the interesting behaviours of your controllers. 
 
-* Controller testing is so boring/repetative it makes you cry.
+* Controller testing is so boring and repetative it makes you cry.
 
 ==DRY your eyes
 Here is a controller spec which tests each of the seven actions, each with either format :html or :js (:ajax) and asserts if that action should be successful or not.
@@ -62,16 +63,20 @@ Here is a controller spec which tests each of the seven actions, each with eithe
 ===What's going on here then?
 
 For each of the seven controller actions in @action_mapping a test has been created for each of its two formats.  
-Each of the 14 tests attempts to make the appropriate request and asserts if it should be_succsess or not, ie;
+Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
+
+====example of generated tests
 
   it "should respond to index:html"
   it "should respond to new:ajax"
   it "should NOT respond to new:html"
 
-In the case of :index and :new no params are supplied in the request.  
-For :create the params include attributes for the object class of the controller being tested.
-For :update the params include attributes for the object and an :id.
-And all other actions just get an :id.
+For each of the actions it makes assumptions about what to include in the params.  
+* In the case of :index and :new no params are supplied in the request.  
+* For :create the params include attributes for the object class of the controller being tested.
+* For :update the params include attributes for the object and an :id.
+* All other actions (:show, :edit, :destroy) just get an :id.
+
 
 
 ===How to make it work
@@ -94,3 +99,5 @@ Finally (I know, this is a _lot_ of work) add a call to a method provied by the 
 
 
 Still a work in progress.  More changes and more docs to come.
+Currently only supports :html and :js formats but the others can be added easily.  
+
