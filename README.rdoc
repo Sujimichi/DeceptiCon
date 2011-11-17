@@ -4,7 +4,7 @@
 
 * Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
 * Your controller actions are conventional
-  
+
     :show, :edit, :update and :destroy require :id in the params
     :create requires attributes for the appropriate object
     :update requires attributes for the appropriate object and an :id
@@ -33,7 +33,7 @@
 * Controller testing is so boring/repetative it makes you cry
 
 ==DRY your eyes
-Here is a controller spec which tests each of the seven actions, each with either format :html or :js
+Here is a controller spec which tests each of the seven actions, each with either format :html or :js and asserts if that action was successful or not.
 
   describe NotesController do
     before(:each) do
@@ -42,13 +42,39 @@ Here is a controller spec which tests each of the seven actions, each with eithe
 
     @object = Note
     @action_mapping = {
-      :index => {:html => true,  :ajax => true},
+      :index => {:html => true,  :ajax => false},
       :show =>  {:html => true,  :ajax => false},
-      :new =>   {:html => false, :ajax => false},
-      :create =>{:html => true,  :ajax => true},
+      :new =>   {:html => false, :ajax => true},
+      :create =>{:html => false, :ajax => true},
       :edit =>  {:html => false, :ajax => true},
       :update =>{:html => true,  :ajax => true},
-      :destroy=>{:html => true,  :ajax => true},
+      :destroy=>{:html => false, :ajax => false},
     }
     test_mapping
   end
+
+
+So whats the magic here then?
+
+The Magic is in 'decepticon.rb' which you need to put in your spec dir.
+
+Then require and include it in your spec_helper.rb (or in specific controller_spec)
+  require 'decepticon'
+  include DeceptiCon
+
+
+In your controller_spec you need the variables @object and @action_mapping.  These are defined inside the first describe block, but not within a :before or :all filter.
+
+@object is the class for the current controller
+
+@action_mapping is a hash with a key for each action which entails another hash.  This second hash defines the formats which the action will respond_to and entails either true or false to denote if the response.should be_succsess or response.should_not be_succsess
+
+Finally (I know, this is a _lot_ of work) add a call to a method provied by the DeceptiCon module
+
+  test_mapping
+
+If you @action_mapping has seven actions and each has two formats then +test_mapping+ will have generated 14 tests, ie;
+
+  it "should respond to index:html"
+  it "should respond to new:ajax"
+  it "should NOT respond to new:html"
