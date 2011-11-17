@@ -57,6 +57,9 @@ Here is a controller spec which tests each of the seven actions, each with eithe
       :destroy=>{:html => false, :ajax => false},
     }
     assert_mapping
+    
+    it 'should leave me free to now test the important details'
+
   end
 
 
@@ -81,12 +84,11 @@ The generation of the tests is done by the +assert_mapping+ method in the Decept
 
 ====Important Prerequisite
 In order for the generated tests to have :ids and object data in the params it needs to be able to create valid objects for the given class.
-If you have Factories set up for your classes it will use <tt>Factory.biuld(class_name)</tt>.
+If you have Factories set up for your classes it will use <tt>Factory.build(class_name)</tt>.
 It will also work if you have methods named valid_<class_name> ie +valid_note+ or +valid_user_comment+.  
 
-It is the expectation that the object returned by either the Factory the valid_object method will return true for .valid?
-If such a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this is only very basic.
-
+It is the expectation that the object returned by either a Factory or a valid_object method will return true for .valid?
+It it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this is only very basic.
 
 
 ==Setup
