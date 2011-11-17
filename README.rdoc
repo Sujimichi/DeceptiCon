@@ -56,7 +56,7 @@ Here is a controller spec which tests each of the seven actions, each with eithe
       :update =>{:html => true,  :ajax => true},
       :destroy=>{:html => false, :ajax => false},
     }
-    test_mapping
+    assert_mapping
   end
 
 
@@ -77,7 +77,14 @@ For each of the actions it makes assumptions about what to include in the params
 * For :update the params include attributes for the object and an :id.
 * All other actions (:show, :edit, :destroy) just get an :id.
 
-The generation of the tests is done by the +test_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).  It also has one prerequisite requirement of your test setup.  It needs to be able to call methods which return your Factory objects.  It assumes that for each class ie Note it can call a method ie +valid_note+ to return a valid object of that class.  
+The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).  
+
+====Important Prerequisite
+In order for the generated tests to have :ids and object data in the params it needs to be able to create valid objects for the given class.
+The +assert_mapping+ method assumes that it will be able to call methods named <tt>valid_<class_name.underscore></tt>, ie +valid_note+.  
+It is the expectation that a valid_object method will return a Factory generated object which returns true for .valid?
+If such a method can't be found it will attempt to create an object and populate it attributes to make it valid but this is only very basic.
+
 
 
 ===How to make it work
@@ -98,7 +105,7 @@ The expectation of the request is either +true+ or +false+ to denote if the <tt>
 
 Finally (I know, this is a _lot_ of work) add a call to a method provided by the DeceptiCon module
 
-  test_mapping
+  assert_mapping
 
 
 Still a work in progress.  More changes and more docs to come.
