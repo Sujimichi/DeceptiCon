@@ -2,30 +2,51 @@
 
 ==Does this apply to you?
 
-* Your controllers have only seven deadly methods
-  [:index, :show, :new, :create, :edit, :update, :destroy]
-
+* Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
 * Your controller actions are conventional
   * :show, :edit, :update and :destroy  require :id in the params
   * :create requires attributes for the appropriate object
   * :update requires attributes for the appropriate object and an :id
   * :index does not need any params
-
 * Your controllers respond_to :html and :js (or others)
   * some actions repond_to both
   * some respond to one
   * some actions are completely blocked
-
 * Your controller tests are so similar you get double vision looking at them
   * half the tests are identical across different controllers
+  * It takes 10 lines just to make a basic `should be_success` or `should_not be_success` assertion for one action;
 
-  describe "show"
-    it 'should be available with HTML' do
-      get, :show, {:id => @valid_object.id}
-      response.should be_success
+      describe "show"
+        it 'should be available with HTML' do
+          get, :show, {:id => @valid_object.id}
+          response.should be_success
+        end
+        it 'should be unavailable with JS' do
+          xhr :get, :show, {:id => @valid_object.id}
+          response.should_not be_success
+        end
+      end
+  * Your controller_specs are atleast 70 lines long (without before filters etc)
+
+* Controller testing is so boring/repetative it makes you cry
+
+==DRY your eyes
+Here is a controller spec which tests each of the seven actions, each with either format :html or :js
+
+  describe NotesController do
+    before(:each) do
+      assume_logged_in_user
     end
-    it 'should be unavailable with JS' do
-      xhr :get, :show, {:id => @valid_object.id}
-      response.should_not be_success
-    end
+
+    @object = Note
+    @action_mapping = {
+      :index => {:html => true,  :ajax => true},
+      :show =>  {:html => true,  :ajax => false},
+      :new =>   {:html => false, :ajax => false},
+      :create =>{:html => true,  :ajax => true},
+      :edit =>  {:html => false, :ajax => true},
+      :update =>{:html => true,  :ajax => true},
+      :destroy=>{:html => true,  :ajax => true},
+    }
+    test_mapping
   end
