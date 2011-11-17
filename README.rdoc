@@ -135,7 +135,7 @@ To include params for specific formats use the key :<format>_args, ie <tt>:html_
 
 Note the args being passed to the create action; <tt>:args => {:user_id => "valid_user.id"}</tt>.
 The <tt>valid_user.id</tt> is a string not a method or variable.  Before additional params are added any which are strings are eval'd.  
-This allows them to be called in the scope of the test (could not make work with Procs).  Its not ideal.
+This allows methods and variables to be called in the scope of the test (could not make work with Procs).  Its not ideal.
 
 ==Other Stuff
 As well as the main +assert_mapping+ method the DeceptiCon class also provides another method called +fetch+.
