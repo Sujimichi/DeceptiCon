@@ -17,7 +17,7 @@ A way to simplfy your Rails controller tests and make them DRY.
 
 * Your controller tests are so similar you get double vision looking at them
   
-* You just want to test the basic `should be_success` or `should_not be_success` assertions for each action.
+* You want to be able to simply test the basic `should be_success` or `should_not be_success` assertions for each action and each format.
   * but your writing basically the same tests over and over for each controller and each action,
   * and it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
 
@@ -33,7 +33,7 @@ A way to simplfy your Rails controller tests and make them DRY.
       end
     Which means a controller that tests each format of each action will be at least 70 lines long.
 
-* You just want to focus on the interesting behaviours of your controllers. 
+* You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
 
 * Controller testing is so boring and repetative it makes you cry.
 
