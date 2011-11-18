@@ -36,8 +36,9 @@ Here is a controller_spec which tests each of the seven actions, each with eithe
     before(:each) do
       assume_logged_in_user
     end
-
+    
     @object = Note
+    @test_formats = [:html, :ajax] #could also include :xml and :json
     @action_mapping = {   
       :index => {:html => true,  :ajax => false},
       :show =>  {:html => true,  :ajax => false},
