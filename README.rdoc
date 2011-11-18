@@ -1,11 +1,14 @@
 =DeceptiCon
 A way to simplfy your Rails controller tests and make them DRY.
 
+Still a work in progress.  More changes and more docs to come.
+
+
 ==Does this apply to you?
 
 * Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
 * Your routes are resourceful and the actions map to the expected CRUD actions - http://guides.rubyonrails.org/routing.html#crud-verbs-and-actions
-* Your controller actions respond_to :html and :js formats (or others).  Some actions repond_to both, some respond to one and some actions are completely blocked
+* Your controller actions respond_to :html, :js, :xml or :json.  Some actions repond_to all formats, some respond to a few and some actions are completely blocked. 
 
 * Your controller tests are so similar you get double vision looking at them
   
@@ -23,7 +26,7 @@ A way to simplfy your Rails controller tests and make them DRY.
           response.should_not be_success
         end
       end
-    Which means a controller spec that tests each format of each action will be at least 70 lines long.
+    Which means a controller spec that tests 2 formats of each action will be at least 70 lines long.
 
 * Controller testing is so boring and repetative it makes you cry.  You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
 
@@ -55,7 +58,7 @@ Here is a controller spec which tests each of the seven actions, each with eithe
 
 ===What's going on here then?
 
-For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of its two formats.  
+For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of the formats :html and :ajax (js and ajax mean the same thing).  
 Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
 
 ====example of generated tests
@@ -148,9 +151,7 @@ So now you can write
 
 
 
-
-Still a work in progress.  More changes and more docs to come.
-Currently only supports :html and :js formats but the others can be added easily.  
+ 
 
 
 ==Example Controller Spec
