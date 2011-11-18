@@ -8,8 +8,9 @@ module DeceptiCon
     formats ||= $default_test_formats
     formats ||= Formats #otherwise use default set.
     defaults = default_mapping(formats) #get a default mapping for the given formats. Default has all expectations as false ie should_not be_success
-
-    Actions.each do |action| 
+    @skip_actions ||= []
+    actions = Actions - @skip_actions
+    actions.each do |action| 
       @action_mapping[action] ||= {} #in case action has not been supplied
       mapping = defaults[action].merge(@action_mapping[action]) #merge supplied mapping for action over defaults for action
       #mapping must be a hash with {format => true/false} for each format, and optional args to be passed in with the params.  args can be on the keys :args or <format>_args where format is one of the allowed formats.
@@ -41,12 +42,16 @@ module DeceptiCon
 
           mapping[:args] ||= {}
           mapping[:args].merge!(mapping["#{format}_args".to_sym]) if mapping.has_key?("#{format}_args".to_sym) #merge mapping[:args] with args for format, ie: mapping[:ajax_args]
-          #args which are strings are eval'd.  this allows methods like with valid_object to be called here so they are in scope.
-          extra_params = mapping[:args].map{|k,v| {k => (v.is_a?(String) ? eval(v) : v)} }.inject{|i,j| i.merge(j)} 
+          #args which are strings are eval'd.  this allows methods like with valid_object to be called here so they are in scope.  Its not ideal.  Actualy string need to be passed inside string ie "'foo'"
+          extra_params = mapping[:args].map{|k,v| v.is_a?(String) ? { k => eval(v) } : {k => v} }.inject{|i,j| i.merge(j)} 
           params.merge!(extra_params) unless extra_params.nil? #merge the args from mapping with the base args.
-          
+  
           fetch(format, action, params) #Call the request using fetch.  format is either :html or :ajax, action is one of [:index, :show, :new, :create, :edit, :update, :destroy], params is a hash to supply in request.
-          expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
+          if expected_outcome.eql?(:redirect)
+            assert_response(:redirect) 
+          else
+            expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
+          end          
         end
       end
     end
@@ -66,13 +71,16 @@ module DeceptiCon
     return obj if obj && obj.valid?
 
     puts "Warning - Neither the method 'valid_#{class_name}' or a Factory for #{class_name} could be found.  Add a Factory to build a valid #{class_name}.  Will Attempt to construct object nativly" unless obj
-    puts "Warning - Factory generated #{class_name} was not valid.  #{class_name} must be valid, adjust your Factory.  Will add strings and integers to attributes to attempt to make valid" if obj
+    puts "Warning - Generated #{class_name} was not valid #{obj.errors.inspect}.  #{class_name} must be valid, adjust your Factory.  Will add strings and integers to attributes to attempt to make valid" if obj
       
     obj ||= object_class.new
     obj.valid?
-    obj.errors.each do |attr, err|
-      obj.send("#{attr.to_s}=", "a string") #attempt to add a string
-      obj.send("#{attr}=", 42) if obj.send("#{attr}").eql?(0) #or add an int if the string failed.
+    begin
+      obj.errors.each do |attr, err|
+        obj.send("#{attr.to_s}=", "a string") #attempt to add a string
+        obj.send("#{attr}=", 42) if obj.send("#{attr}").eql?(0) #or add an int if the string failed.
+      end
+    rescue
     end
     obj.valid? ? obj.save! : (raise "Unable to create a valid #{class_name}.  You must add a Factory or 'valid_#{class_name}' method.")
     obj
