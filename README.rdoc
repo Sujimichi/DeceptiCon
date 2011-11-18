@@ -4,22 +4,14 @@ A way to simplfy your Rails controller tests and make them DRY.
 ==Does this apply to you?
 
 * Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
-* Your controller actions are conventional
-
-    :show, :edit, :update and :destroy require :id in the params
-    :create requires attributes for the appropriate object
-    :update requires attributes for the appropriate object and an :id
-    :index does not need any params
-
-* Your controller actions respond_to :html and :js formats (or others)
-
-  Some actions repond_to both, some respond to one and some actions are completely blocked
+* Your routes are resourceful and the actions map to the expected CRUD actions - http://guides.rubyonrails.org/routing.html#crud-verbs-and-actions
+* Your controller actions respond_to :html and :js formats (or others).  Some actions repond_to both, some respond to one and some actions are completely blocked
 
 * Your controller tests are so similar you get double vision looking at them
   
 * You want to be able to simply test the basic <tt>should be_success</tt> or <tt>should_not be_success</tt> assertions for each action and each format.
-  * but your writing basically the same tests over and over for each controller and each action,
-  * and it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
+  * but you're basically writing the same tests over and over for each controller and each action,
+  * it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
 
       describe "show"
         it 'should be available with HTML' do
@@ -33,9 +25,7 @@ A way to simplfy your Rails controller tests and make them DRY.
       end
     Which means a controller spec that tests each format of each action will be at least 70 lines long.
 
-* You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
-
-* Controller testing is so boring and repetative it makes you cry.
+* Controller testing is so boring and repetative it makes you cry.  You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
 
 ==DRY your eyes
 Here is a controller spec which tests each of the seven actions, each with either format :html or :js (:ajax) and asserts if that action should be successful or not.
