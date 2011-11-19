@@ -1,5 +1,5 @@
 =DeceptiCon
-A way to simplfy your Rails controller tests and make them DRY.
+A way to simplify your Rails controller tests and make them DRY.
 
 Still a work in progress.  More changes and more docs to come.
 
@@ -8,9 +8,9 @@ Still a work in progress.  More changes and more docs to come.
 
 * Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
 * Your routes are resourceful and the actions map to the expected CRUD actions - http://guides.rubyonrails.org/routing.html#crud-verbs-and-actions
-* Your controller actions respond_to :html, :js, :xml or :json.  Some actions repond_to all formats, some respond to a few and some actions are completely blocked. 
+* Your controller actions respond_to :html, :js, :xml or :json.  Some actions respond_to all formats, some respond to a few and some actions are completely blocked.
 * Your controller tests are so similar you get double vision looking at them
-* You want to be able to simply test the basic <tt>should be_success</tt> or <tt>should_not be_success</tt> assertions for each action and each format (atleast html and js).
+* You want to be able to simply test the basic <tt>should be_success</tt> or <tt>should_not be_success</tt> assertions for each action and each format (at least html and js).
   * but you're basically writing the same tests over and over for each controller and each action,
   * it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
 
@@ -24,9 +24,9 @@ Still a work in progress.  More changes and more docs to come.
           response.should_not be_success
         end
       end
-    Just testing the basic responses is going to take atleast 70 lines!
+    Just testing the basic responses is going to take at least 70 lines!
 
-* Controller testing is so boring and repetative it makes you cry.  You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
+* Controller testing is so boring and repetitive it makes you cry.  You just want to focus on the interesting behaviors of your controllers and leave this repetitive stuff to a robot.
 
 ==DRY your eyes
 Here is a controller_spec which tests each of the seven actions, each with either format :html or :js (:ajax) and asserts if that action should be successful or not.
@@ -36,10 +36,10 @@ Here is a controller_spec which tests each of the seven actions, each with eithe
     before(:each) do
       assume_logged_in_user
     end
-    
+
     @object = Note
     @test_formats = [:html, :ajax] #could also include :xml and :json
-    @action_mapping = {   
+    @action_mapping = {
       :index => {:html => true,  :ajax => false},
       :show =>  {:html => true,  :ajax => false},
       :new =>   {:html => false, :ajax => true},
@@ -49,15 +49,15 @@ Here is a controller_spec which tests each of the seven actions, each with eithe
       :destroy=>{:html => false, :ajax => false},
     }
     assert_mapping
-    
+
     it 'should leave me free to now test the important details'
   end
 
 
 ===What's going on here then?
 
-For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of the formats :html and :ajax (js and ajax mean the same thing).  
-Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
+For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of the formats :html and :ajax (js and ajax mean the same thing).
+Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_success or not.
 
 ====example of generated tests
 
@@ -65,28 +65,28 @@ Each of the 14 generated tests attempts to make the appropriate request (get, pu
   it "should respond to new:ajax"
   it "should NOT respond to new:html"
 
-For each of the actions it makes assumptions about what to include in the params.  
-* In the case of :index and :new no params are supplied in the request.  
+For each of the actions it makes assumptions about what to include in the params.
+* In the case of :index and :new no params are supplied in the request.
 * For :create the params include attributes for the object class of the controller being tested.
 * For :update the params include attributes for the object and an :id.
 * All other actions (:show, :edit, :destroy) just get an :id.
 
-The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).  
+The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).
 
 ====Important Prerequisite
 In order for the generated tests to have :ids and object data in the params it needs to be able to create valid objects for the given class.
 If you have Factories set up for your classes it will use <tt>Factory.build(class_name)</tt>.
-It will however first look for a method called <tt>valid_<class_name></tt> ie +valid_note+ or +valid_user_comment+.  
+It will however first look for a method called <tt>valid_<class_name></tt> ie +valid_note+ or +valid_user_comment+.
 
 It is the expectation that the object returned by either a Factory or a valid_object method will return true for .valid?
 It it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this only works in very simple situations.
 
 ====Be Lazy
-You only need to define the mapping for actions which have the expectation of a susscessful response.  
+You only need to define the mapping for actions which have the expectation of a successful response.
 
   @action_mapping = { :index => {:html => true} }
 
-The assumes that the other actions are expected to not be succsessful for either format and only html will be succsessful for index.
+The assumes that the other actions are expected to not be successful for either format and only html will be successful for index.
 
 By default all four formats (html, js, xml, json) are tested for all seven actions.  You can adjust this for all controllers or just for the current.  See more in Options later.
 
@@ -101,8 +101,8 @@ These should be defined inside a describe block, but *not* inside a +before+ or 
 <tt>@object</tt> is the class of the object for the current controller, ie Note for the NotesController.
     @object = Note
 
-<tt>@action_mapping</tt> is a hash with a key for each action.  Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expection of the request; <tt>{:action => {:format => expectation of request}}</tt>.
-The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_succsess</tt> or if the <tt>response.should_not be_succsess</tt>. 
+<tt>@action_mapping</tt> is a hash with a key for each action.  Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expectation of the request; <tt>{:action => {:format => expectation of request}}</tt>.
+The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_success</tt> or if the <tt>response.should_not be_success</tt>.
     @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
 Any action which is not included will be considered to not have successful responses to either format.
 
@@ -111,9 +111,9 @@ Add a call to a method provided by the DeceptiCon module after the <tt>@action_m
   assert_mapping
 
 Finally (I know, this is a _lot_ of work) make sure you have a Factory ready for the given object class
-  
+
   Factory.define(:note) { |f| f.text "some text" }
-  
+
 Now run your specs
 
 ==Options
@@ -141,17 +141,17 @@ You can also pass in additional params to be added to the request, ie;
       :index => {:html => true,  :ajax => false, :html_args => {:limit => 5} },
       :show =>  {:html => true,  :ajax => false},
       :new =>   {:html => false, :ajax => true,  :ajax_args => {:published => false} },
-      :create =>{:html => true,  :ajax => true,  :args => {:assign_to_user => "valid_user.id"}, :ajax_args => {:preview => true} }, 
+      :create =>{:html => true,  :ajax => true,  :args => {:assign_to_user => "valid_user.id"}, :ajax_args => {:preview => true} },
       :edit =>  {:html => false, :ajax => true},
       :update =>{:html => true,  :ajax => true},
       :destroy=>{:html => false, :ajax => false},
     }
 
-Additional params supplied with the key :args will be included in requests to all formats.  
+Additional params supplied with the key :args will be included in requests to all formats.
 To include params for specific formats use the key :<format>_args, ie <tt>:html_args</tt>.
 
 Note the args being passed to the create action; <tt>:args => {:user_id => "valid_user.id"}</tt>.
-The <tt>valid_user.id</tt> is a string not a method or variable.  Before additional params are added any which are strings are eval'd.  
+The <tt>valid_user.id</tt> is a string not a method or variable.  Before additional params are added any which are strings are eval'd.
 This allows methods and variables to be called in the scope of the test (could not make work with Procs).  Its not ideal.
 
 ==Other Stuff
@@ -166,7 +166,7 @@ To make js requests you write;
     xhr :get, :index
     xhr :post, :update, params
 
-So now you can write 
+So now you can write
     fetch :html, :index
     fetch :ajax, :index
     fetch :html, :update, params
@@ -174,40 +174,40 @@ So now you can write
 
 
 
- 
+
 
 
 ==Example Controller Spec
 A controller spec which tests all seven actions, both html and js formats for three different types of User.
 
     require 'spec_helper'
-    
+
     describe HelpDocumentsController do
-      
-      describe "Accessability by non-logged-in users" do 
+
+      describe "Accessibility by non-logged-in users" do
         @object = HelpDocument
-        @action_mapping = {  } #no mapping of actions => completly blocked, all actions are {:html => false, :ajax => false}
+        @action_mapping = {  } #no mapping of actions => completely blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
-    
-      describe "Accessability by logged-in users without roles" do 
-        before(:each) do 
+
+      describe "Accessibility by logged-in users without roles" do
+        before(:each) do
           assume_logged_in_user
         end
         @object = HelpDocument
-        @action_mapping = {  } #no mapping of actions => completly blocked, all actions are {:html => false, :ajax => false}
+        @action_mapping = {  } #no mapping of actions => completely blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
-    
-      describe "Accessability by logged-in users with admin role" do 
-        before(:each) do 
+
+      describe "Accessibility by logged-in users with admin role" do
+        before(:each) do
           assume_logged_in_user
           @current_user.add_role :admin
         end
-    
+
         @object = HelpDocument
         @action_mapping = {
-          :index => {:html => true,  :ajax => false}, 
+          :index => {:html => true,  :ajax => false},
           :show =>  {:html => false, :ajax => false},
           :new =>   {:html => false, :ajax => false},
           :create =>{:html => true,  :ajax => false},
@@ -217,5 +217,5 @@ A controller spec which tests all seven actions, both html and js formats for th
         }
         assert_mapping
       end
-    
+
     end
