@@ -29,7 +29,7 @@ Still a work in progress.  More changes and more docs to come.
 * Controller testing is so boring and repetative it makes you cry.  You just want to focus on the interesting behaviours of your controllers and leave this repetitive stuff to a robot.
 
 ==DRY your eyes
-Here is a controller_spec which tests each of the seven actions, each with either format :html or :js (:ajax) and asserts if that action should be successful or not.
+Here is a controller_spec which tests the html and js (ajax) responses to each of the seven actions and asserts if the response should be successful or not.
 
   require 'spec_helper'
   describe NotesController do
@@ -55,38 +55,39 @@ Here is a controller_spec which tests each of the seven actions, each with eithe
 
 
 ===What's going on here then?
-
-For each of the seven controller actions in <tt>@action_mapping</tt> a test has been created for each of the formats :html and :ajax (js and ajax mean the same thing).  
+Two tests have been generated for each of the seven controller actions to test thier response to both html and js requests.
 Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
-
-====example of generated tests
-
-  it "should respond to index:html"
-  it "should respond to new:ajax"
-  it "should NOT respond to new:html"
 
 For each of the actions it makes assumptions about what to include in the params.  
 * In the case of :index and :new no params are supplied in the request.  
-* For :create the params include attributes for the object class of the controller being tested.
+* For :create the params include attributes for the appropriate object.
 * For :update the params include attributes for the object and an :id.
 * All other actions (:show, :edit, :destroy) just get an :id.
 
-The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the controller_spec (or spec_helper).  
-
 ====Important Prerequisite
-In order for the generated tests to have :ids and object data in the params it needs to be able to create valid objects for the given class.
+For all the actions, aside from :index and :new, the test will need to construct an object in the test DB for the controller.
 If you have Factories set up for your classes it will use <tt>Factory.build(class_name)</tt>.
 It will however first look for a method called <tt>valid_<class_name></tt> ie +valid_note+ or +valid_user_comment+.  
 
 It is the expectation that the object returned by either a Factory or a valid_object method will return true for .valid?
 It it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this only works in very simple situations.
 
+
+The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the spec_helper.
+
+====example of generated tests
+  it "should respond to index:html"
+  it "should respond to new:ajax"
+  it "should NOT respond to new:html"
+
+
+
 ====Be Lazy
-You only need to define the mapping for actions which have the expectation of a susscessful response.  
+You only need to define the mapping for actions which have the expectation of a susscessful response.  The others will be assumed to not have a succsessful response.
 
   @action_mapping = { :index => {:html => true} }
 
-The assumes that the other actions are expected to not be succsessful for either format and only html will be succsessful for index.
+Without other options, just using the above action_maping would result in all seven actions being tested for thier response to each of the four formats (html, js, xml, json) with only the html response to index expected to be succsessful.
 
 By default all four formats (html, js, xml, json) are tested for all seven actions.  You can adjust this for all controllers or just for the current.  See more in Options later.
 
@@ -125,12 +126,11 @@ You can set which formats are tested for all controllers by adding a $default_te
   include DeceptiCon
 
 You can also control which formats to test on a per-controller basis by including a @test_formats array alongside the @action_mapping.
-
   @test_format = [:html, :xml]
+
 This over-rides anything set by $default_test_formats
 
 Which actions are tested can also be set on a per-controller basis.  By default all seven actions are tested by you can include an array (@skip_actions) to have some actions ignored.
-
   @skip_actions = [:edit, :udate, :destroy] #these three will not be tested.
 
 
@@ -159,22 +159,35 @@ As well as the main +assert_mapping+ method the DeceptiCon class also provides a
 This is used to unify the way you make requests to different formats.
 
 For example to make html requests you write;
-    get :index
-    post :update, params
+  get :index
+  post :update, params
 
 To make js requests you write;
-    xhr :get, :index
-    xhr :post, :update, params
+  xhr :get, :index
+  xhr :post, :update, params
+
+To make either :xml or :json requests you add the line;
+  @request.env['HTTP_ACCEPT'] = "application/#{format}"
+where format is either "xml" or "json", and then use get, post, put or delete just like an html request.
+
+So, thats a little vexatious when trying to use it programatically.
 
 So now you can write 
-    fetch :html, :index
-    fetch :ajax, :index
-    fetch :html, :update, params
-    fetch :ajax, :update, params
+  fetch :html, :index
+  fetch :ajax, :index
+  fetch :json, :index
+  fetch :html, :update, params
+  fetch :ajax, :update, params
+  fetch :json, :update, params
+
+get, post etc can take four args
+  get(:show, {'id' => "12"}, {'user_id' => 5}, {'message' => 'booya!'})
+
+fetch passes the four args
+  fetch(:html, :show, {'id' => "12"}, {'user_id' => 5}, {'message' => 'booya!'})
 
 
 
- 
 
 
 ==Example Controller Spec
