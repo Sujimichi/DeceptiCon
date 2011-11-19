@@ -55,8 +55,8 @@ Here is a controller_spec which tests the html and js (ajax) responses to each o
 
 
 ===What's going on here then?
-Two tests have been generated for each of the seven controller actions to test thier response to both html and js requests.
-Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_succsess or not.
+Two tests have been generated for each of the seven controller actions to test their response to both html and js requests.
+Each of the 14 generated tests attempts to make the appropriate request (get, put, post or delete) and asserts if it should be_success or not.
 
 For each of the actions it makes assumptions about what to include in the params.
 * In the case of :index and :new no params are supplied in the request.
@@ -83,11 +83,11 @@ The generation of the tests is done by the +assert_mapping+ method in the Decept
 
 
 ====Be Lazy
-You only need to define the mapping for actions which have the expectation of a susscessful response.  The others will be assumed to not have a succsessful response.
+You only need to define the mapping for actions which have the expectation of a successful response.  The others will be assumed to not have a successful response.
 
   @action_mapping = { :index => {:html => true} }
 
-Without other options, just using the above action_maping would result in all seven actions being tested for thier response to each of the four formats (html, js, xml, json) with only the html response to index expected to be succsessful.
+Without other options, just using the above action_mapping would result in all seven actions being tested for their response to each of the four formats (html, js, xml, json) with only the html response to index expected to be successful.
 
 By default all four formats (html, js, xml, json) are tested for all seven actions.  You can adjust this for all controllers or just for the current.  See more in Options later.
 
@@ -131,7 +131,7 @@ You can also control which formats to test on a per-controller basis by includin
 This over-rides anything set by $default_test_formats
 
 Which actions are tested can also be set on a per-controller basis.  By default all seven actions are tested by you can include an array (@skip_actions) to have some actions ignored.
-  @skip_actions = [:edit, :udate, :destroy] #these three will not be tested.
+  @skip_actions = [:edit, :update, :destroy] #these three will not be tested.
 
 
 ==Extending the params
@@ -228,5 +228,6 @@ A controller spec which tests all seven actions, both html and js formats for th
         }
         assert_mapping
       end
+
 
     end
