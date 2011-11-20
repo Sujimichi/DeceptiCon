@@ -9,6 +9,8 @@ module DeceptiCon
     formats ||= Formats #otherwise use default set.
     defaults = default_mapping(formats) #get a default mapping for the given formats. Default has all expectations as false ie should_not be_success
     @skip_actions ||= []
+
+
     actions = Actions - @skip_actions
     actions.each do |action| 
       @action_mapping[action] ||= {} #in case action has not been supplied
@@ -17,11 +19,16 @@ module DeceptiCon
       object_class = @object  #@object is a class ie Entity or JvrModel.  
       #@object and @action_mapping should be defined in the controller which is being tested.
 
-      class_name = object_class.to_s.underscore
+      
       mapping.each do |format, expected_outcome|
-        next unless formats.include?(format) #do I even need to comment this line.  Ruby is basicaly runnable comments!
+
+        format = :ajax if format.eql?(:js) #:js == :ajax
+        next unless Formats.include?(format) #do I even need to comment this line.  Ruby is basicaly runnable comments!
 
         it "should #{expected_outcome.eql?(false) ? 'NOT ' : '' }respond to #{action}:#{format}" do #Define an rspec test step
+          
+          object_class ||= begin;Kernel.const_get(@controller.class.to_s.sub("Controller","").singularize); rescue; nil; end
+          class_name = object_class.to_s.underscore
 
           request.env["HTTP_REFERER"] = "/" #set somewhere for :back to point at if any actions redirect_to :back
           #valid_obj = send("valid_#{class_name}") unless object_class.nil? #create a valid object for the object_class.  Assumes methods for each resourse ie valid_entity, valid_jvr_model etc. 
@@ -86,7 +93,7 @@ module DeceptiCon
     obj
   end
 
-  def get_action_lookup
+  def action_lookup
     {
       :index => {:html => Proc.new{|*args| get :index, *args},      :ajax => Proc.new{|*args| xhr :get, :index, *args}}, 
       :show =>  {:html => Proc.new{|*args| get :show, *args},       :ajax => Proc.new{|*args| xhr :get, :show, *args}}, 
@@ -110,7 +117,7 @@ module DeceptiCon
       format = :html
     end
 
-    @al ||= get_action_lookup
+    @al ||= action_lookup
     @al[action][format].call(*args)
   end  
 
