@@ -1,4 +1,4 @@
-=DeceptiCon - Don't Ever Code Extra Petty Tests in Controllers
+=DeceptiCon
 Simplify and DRY your Rails controller specs by automating the simple response tests, leaving you free to test the important aspects.
 
 Still a work in progress.  More changes and more docs to come.
