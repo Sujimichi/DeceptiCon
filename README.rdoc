@@ -1,5 +1,5 @@
 =DeceptiCon - Don't Ever Code Extra Petty Tests in Controllers
-Simplify and DRY your Rails controller specs by automatting the simple response tests, leaving you free to test the important aspects.
+Simplify and DRY your Rails controller specs by automating the simple response tests, leaving you free to test the important aspects.
 
 Still a work in progress.  More changes and more docs to come.
 
@@ -27,7 +27,7 @@ Still a work in progress.  More changes and more docs to come.
     Just testing the basic responses to html and js to each action is going to take at least 70 lines!
 
 * You just want to focus on testing the interesting behaviors of your controllers and leave this repetitive stuff to a robot!
-* Controller testing is so boring and repetitive it makes you cry.  
+* Controller testing is so boring and repetitive it makes you cry.
 
 ==DRY your eyes
 Here is a controller_spec which tests the html and js (ajax) responses to each of the seven actions and asserts if the response should be successful or not.
@@ -74,12 +74,12 @@ For each of the actions it makes assumptions about what to include in the params
 For all the actions, aside from :index and :new, the test needs to construct a test object to be used in the controller.
 If you have Factories set up it will use <tt>Factory.build(class_name)</tt>.
 It also allows you to have <tt>valid_object</tt> methods ie; +valid_note+ or +valid_user_comment+ to return an object.
-It will use a valid_object method in preference to a Factory if both are available.  
+It will use a valid_object method in preference to a Factory if both are available.
 The class of the object is derived from the controller name, but can be over-ridden (see settings).
 
 
 It is the expectation that an object returned by either a Factory or a valid_object method will return true for <tt>.valid?</tt>
-If it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this only work for objecs with very simple validations.
+If it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this only work for objects with very simple validations.
 
 Once the request is made it calls either <tt>response.should be_success or response.should_not be_success</tt> depending on the value given for the particular action and format.
 As well as just true and false you can also use :redirect ie;
@@ -100,7 +100,7 @@ You only need to define the mapping for actions which have the expectation of a 
   @action_mapping = { :index => {:html => true} }
 
 Without other options (see later), using the above action_mapping would result in all seven actions being tested for their response to each of the four formats (html, js, xml, json) but only the html response to index is expected to be successful.
-By default all four formats (html, js, xml, json) are tested for all seven actions.  
+By default all four formats (html, js, xml, json) are tested for all seven actions.
 You can adjust this for all controllers or just for the current.  See more in Options later.
 
 ==Setup
@@ -244,4 +244,3 @@ A controller spec which tests all seven actions, both html and js formats for th
 
 
     end
-
