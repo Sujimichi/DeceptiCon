@@ -87,7 +87,7 @@ As well as just true and false you can also use :redirect ie;
 
 At some point I will also add the ability to pass status codes in for more granular control.
 
-The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be required and included in the spec_helper.  See Setup later for complete instructions.
+The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be included in the spec_helper.  See Setup later for complete instructions.
 
 ====example of generated tests
   it "should respond to index:html"
@@ -104,15 +104,20 @@ By default all four formats (html, js, xml, json) are tested for all seven actio
 You can adjust this for all controllers or just for the current.  See more in Options later.
 
 ==Setup
+First add the gem to your Gemfile (probably in the :test and :development groups);
+  group :test, :development do
+    gem 'decepticon'
+  end
 
-First put the 'decepticon.rb' file into your spec dir. Then require and include it in your spec_helper.rb (or in specific controller_spec)
-  require 'decepticon'
+DeceptiCon is not available on Rubygems yet.  You need to clone this repo and then build and install the gem;
+git clone git@github.com:Sujimichi/DeceptiCon.git && cd DeceptiCon && rake build && rake install
+
+Then include it in your spec_helper (or in a specific controller)
   include DeceptiCon
 
-In your controller_spec you need to define the <tt>@action_mapping</tt> variable.  It should be defined inside a describe block, but *not* inside a +before+ or +all+ filter.
 
-
-<tt>@action_mapping</tt> is a hash with a key for each action.  Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expectation of the request; <tt>{:action => {:format => expectation of request}}</tt>.
+In each controller_spec you need to define an <tt>@action_mapping</tt> variable.  It should be defined inside a describe block, but *not* inside a +before+ or +all+ filter.  It is simply a map of controller action and request format to an expectation for the response as a hash with a key for each action.
+Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expectation of the request; <tt>{:action => {:format => expectation of request}}</tt>.
 The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_success</tt> or if the <tt>response.should_not be_success</tt>.
     @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
 Any action which is not included will be considered to not have successful responses to either format.
