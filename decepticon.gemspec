@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.description = %q{A way to simplify rails controller specs by generating the simple response tests }
 
   s.rubyforge_project = "decepticon"
-
   s.add_development_dependency('rspec')
   s.add_development_dependency('ZenTest')
 
@@ -21,5 +20,4 @@ Gem::Specification.new do |s|
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
-
 end
