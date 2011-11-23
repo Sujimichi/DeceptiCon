@@ -110,24 +110,29 @@ First add the gem to your Gemfile (probably in the :test and :development groups
   end
 
 DeceptiCon is not available on Rubygems yet.  You need to clone this repo and then build and install the gem;
-git clone git@github.com:Sujimichi/DeceptiCon.git && cd DeceptiCon && rake build && rake install
+  git clone git@github.com:Sujimichi/DeceptiCon.git && cd DeceptiCon && rake build && rake install
 
 Then include it in your spec_helper (or in a specific controller)
   include DeceptiCon
 
 
-In each controller_spec you need to define an <tt>@action_mapping</tt> variable.  It should be defined inside a describe block, but *not* inside a +before+ or +all+ filter.  It is simply a map of controller action and request format to an expectation for the response as a hash with a key for each action.
-Each action entails another hash which defines the formats which the action will <tt>respond_to</tt> and the expectation of the request; <tt>{:action => {:format => expectation of request}}</tt>.
-The expectation of the request is either +true+ or +false+ to denote if the <tt>response.should be_success</tt> or if the <tt>response.should_not be_success</tt>.
-    @action_mapping = { :index => {:html => true,  :ajax => false}, :show =>  {:html => true,  :ajax => true}, ....}
+In each controller_spec you need to define an <tt>@action_mapping</tt> variable.  It should be defined inside a describe block, but *not* inside a +before+ filter.  It is a map of controller actions and request formats to expectations for responses.  It is written as a hash with a key for each action entailing a sub hash defining formats and coresponding expecations for response.success?.
+  {:action => {:format => expectation of request}
+
+The expectation of the request is either +true+, +false+ or +:redirect+.  (I will extend it to take status codes)
 Any action which is not included will be considered to not have successful responses to either format.
 
-Add a call to a method from the DeceptiCon module after the <tt>@action_mapping</tt> definition
+   @action_mapping = { 
+     :index => {:html => true,  :ajax => false}, 
+     :new =>  {:html => false,  :ajax => true},
+     :create => {:html => :redirect,  :ajax => false}
+    }
 
+
+After the <tt>@action_mapping</tt> add a call to a method from the DeceptiCon module
   assert_mapping
 
 Finally (I know, this is a _lot_ of work) make sure you have a Factory ready for the given object class
-
   Factory.define(:note) { |f| f.text "some text" }
 
 Now run your specs
@@ -214,7 +219,6 @@ A controller spec which tests all seven actions, both html and js formats for th
     describe HelpDocumentsController do
 
       describe "Accessibility by non-logged-in users" do
-        @object = HelpDocument
         @action_mapping = {  } #no mapping of actions => completely blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
@@ -223,7 +227,6 @@ A controller spec which tests all seven actions, both html and js formats for th
         before(:each) do
           assume_logged_in_user
         end
-        @object = HelpDocument
         @action_mapping = {  } #no mapping of actions => completely blocked, all actions are {:html => false, :ajax => false}
         assert_mapping
       end
@@ -234,7 +237,6 @@ A controller spec which tests all seven actions, both html and js formats for th
           @current_user.add_role :admin
         end
 
-        @object = HelpDocument
         @action_mapping = {
           :index => {:html => true,  :ajax => false},
           :show =>  {:html => false, :ajax => false},
