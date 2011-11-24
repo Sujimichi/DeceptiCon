@@ -11,6 +11,7 @@ module DeceptiCon
     @skip_actions ||= []
 
     actions = Actions - @skip_actions
+    @action_mapping ||= {} #incase it has not been set
     actions.each do |action| 
       @action_mapping[action] ||= {} #in case action has not been supplied
       mapping = defaults[action].merge(@action_mapping[action]) #merge supplied mapping for action over defaults for action
@@ -32,6 +33,11 @@ module DeceptiCon
         end
       end
     end
+  end
+
+  def assert_blocked
+    @action_mapping = {}
+    assert_mapping
   end
 
   def inner_step_logic object_class, action, format, expected_outcome, mapping

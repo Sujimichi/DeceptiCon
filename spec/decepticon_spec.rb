@@ -128,7 +128,7 @@ describe DeceptiCon do
     RSpec::Core::Probe.stub!(:new => @probe)
     @all_actions = [:index, :show, :new, :create, :edit, :update, :destroy]
   end
-
+  
   describe "fetch" do 
     before(:each) do 
       @request = Class.new
@@ -213,6 +213,8 @@ describe DeceptiCon do
       @resp = Struct::Response.new  
       Struct::Response.stub!(:new => @resp)
     end
+
+
 
     describe "calling the method 'it' with the correct message text" do 
       before(:each) do 
@@ -431,6 +433,14 @@ describe DeceptiCon do
         @resp.should_receive(:success?).exactly(7*4).times.and_return(false)
         assert_mapping
       end
+
+      it 'should test all actions and formats as false when no action_mapping is present' do 
+        @action_mapping = nil #no action_mapping
+        should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
+        @resp.should_receive(:success?).exactly(7*4).times.and_return(false)
+        assert_mapping
+      end
+
       it 'should test all actions and formats as false except those specified' do 
         @action_mapping = {:create => {:html => true}} #no mappings set
         should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
@@ -486,5 +496,17 @@ describe DeceptiCon do
       end
     
     end    
+  end
+  describe "assert_blocked" do 
+
+    it 'should call asser_mapping and set @action_mapping to {}' do 
+      @dont_yield = true #don't yield the generated test block 
+      should_receive(:assert_mapping).once
+      @action_mapping.should be_nil
+      assert_blocked
+      @action_mapping.should == {}
+    end
+
+
   end
 end
