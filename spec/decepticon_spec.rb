@@ -266,28 +266,28 @@ describe DeceptiCon do
           }
           after( :each){ assert_mapping }
 
-          it 'should require the expected boolean from response.succsess?' do 
+          it "should require the expected boolean from response.succsess? - #{action}:html" do 
             @action_mapping = {action => {:html => true, :ajax => false, :xml => false, :json => false}}
             @resp.should_receive(:success?).once.and_return(true)
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(false)
           end
-          it 'should require the expected boolean from response.succsess?' do 
+          it "should require the expected boolean from response.succsess? - #{action}:ajax" do 
             @action_mapping = {action => {:html => false, :ajax => true, :xml => false, :json => false}}
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(true)
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(false)
           end
-          it 'should require the expected boolean from response.succsess?' do 
+          it "should require the expected boolean from response.succsess? - #{action}:xml" do 
             @action_mapping = {action => {:html => false, :ajax => false, :xml => true, :json => false}}
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(true)
             @resp.should_receive(:success?).once.and_return(false)
           end
-          it 'should require the expected boolean from response.succsess?' do 
+          it "should require the expected boolean from response.succsess? - #{action}:json" do 
             @action_mapping = {action => {:html => false, :ajax => false, :xml => false, :json => true}}
             @resp.should_receive(:success?).once.and_return(false)
             @resp.should_receive(:success?).once.and_return(false)
@@ -321,77 +321,6 @@ describe DeceptiCon do
         end
       end
     end
-
-    describe "defaults and over-riding default values" do 
-      before(:each) do 
-        obj = TestObject.new
-        obj.stub!(:valid? => true, :save! => true, :id => 42, :attributes => {:name => nil,:text => nil} )
-        should_receive(:valid_test_object).any_number_of_times.and_return(obj) #assert the valid_object method is called and return a valid object
-        @object = TestObject
-      end
-
-      it 'should test all actions and formats as false when none are given' do 
-        @action_mapping = {} #no mappings set
-        should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
-        @resp.should_receive(:success?).exactly(7*4).times.and_return(false)
-        assert_mapping
-      end
-      it 'should test all actions and formats as false except those specified' do 
-        @action_mapping = {:create => {:html => true}} #no mappings set
-        should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
-        @resp.should_receive(:success?).exactly(12).times.and_return(false) #first 12 return false
-        @resp.should_receive(:success?).exactly(1).times.and_return(true)   #13th (for html#create) returns true
-        @resp.should_receive(:success?).exactly(15).times.and_return(false) #rest return false
-        assert_mapping
-      end
-
-      it 'should skip tests for given actions' do 
-        @action_mapping = {} #no mappings set
-        @skip_actions = [:index, :show, :update]
-
-        [:html, :ajax, :xml, :json].each do |format|
-          should_not_receive(:fetch).with(format, :index, {})
-          should_not_receive(:fetch).with(format, :show, {})
-          should_receive(:fetch).exactly(1).times.with(format, :new, {})
-          should_receive(:fetch).exactly(1).times.with(format, :create,  {:test_object => {:name => nil, :text => nil}})
-          should_receive(:fetch).exactly(1).times.with(format, :edit, {:id => 1})
-          should_not_receive(:fetch).with(format, :update, {})
-          should_receive(:fetch).exactly(1).times.with(format, :destroy, {:id => 1  })
-        end       
-        @resp.should_receive(:success?).exactly(16).and_return(false)
-        assert_mapping
-      end
-
-      it 'should only tests specified formats when given' do 
-        @action_mapping = {} #no mappings set
-        @test_formats = [:html, :json]
-
-        [:html, :json].each do |format|
-          should_receive(:fetch).exactly(1).times.with(format, :index, {})
-          should_receive(:fetch).exactly(1).times.with(format, :show, {:id => 1})
-          should_receive(:fetch).exactly(1).times.with(format, :new, {})
-          should_receive(:fetch).exactly(1).times.with(format, :create,  {:test_object => {:name => nil, :text => nil} })
-          should_receive(:fetch).exactly(1).times.with(format, :edit, {:id => 1})
-          should_receive(:fetch).exactly(1).times.with(format, :update, {:test_object => {:name => nil, :text => nil}, :id => 42})
-          should_receive(:fetch).exactly(1).times.with(format, :destroy, {:id => 1  })
-        end       
-
-        [:xml, :ajax].each do |format|
-          should_not_receive(:fetch).with(format, :index, {})
-          should_not_receive(:fetch).with(format, :show, {:id => 1})
-          should_not_receive(:fetch).with(format, :new, {})
-          should_not_receive(:fetch).with(format, :create,  {:test_object => {:name => nil, :text => nil} })
-          should_not_receive(:fetch).with(format, :edit, {:id => 1})
-          should_not_receive(:fetch).with(format, :update, {:test_object => {:name => nil, :text => nil}, :id => 42})
-          should_not_receive(:fetch).with(format, :destroy, {:id => 1  })
-        end       
-
-        @resp.should_receive(:success?).exactly(14).and_return(false)
-        assert_mapping
-
-      end
-    end
-
 
     describe "calling fetch with format, args and action:" do 
       before(:each) do 
@@ -486,6 +415,76 @@ describe DeceptiCon do
         end 
       end     
     end
-  end
 
+
+    describe "defaults and over-riding default values" do 
+      before(:each) do 
+        obj = TestObject.new
+        obj.stub!(:valid? => true, :save! => true, :id => 42, :attributes => {:name => nil,:text => nil} )
+        should_receive(:valid_test_object).any_number_of_times.and_return(obj) #assert the valid_object method is called and return a valid object
+        @object = TestObject
+      end
+
+      it 'should test all actions and formats as false when none are given' do 
+        @action_mapping = {} #no mappings set
+        should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
+        @resp.should_receive(:success?).exactly(7*4).times.and_return(false)
+        assert_mapping
+      end
+      it 'should test all actions and formats as false except those specified' do 
+        @action_mapping = {:create => {:html => true}} #no mappings set
+        should_receive(:fetch).exactly(7*4).times  #for each 7 actions for each 4 formats
+        @resp.should_receive(:success?).exactly(12).times.and_return(false) #first 12 return false
+        @resp.should_receive(:success?).exactly(1).times.and_return(true)   #13th (for html#create) returns true
+        @resp.should_receive(:success?).exactly(15).times.and_return(false) #rest return false
+        assert_mapping
+      end
+
+      it 'should skip tests for given actions' do 
+        @action_mapping = {} #no mappings set
+        @skip_actions = [:index, :show, :update]
+
+        [:html, :ajax, :xml, :json].each do |format|
+          should_not_receive(:fetch).with(format, :index, {})
+          should_not_receive(:fetch).with(format, :show, {})
+          should_receive(:fetch).exactly(1).times.with(format, :new, {})
+          should_receive(:fetch).exactly(1).times.with(format, :create,  {:test_object => {:name => nil, :text => nil}})
+          should_receive(:fetch).exactly(1).times.with(format, :edit, {:id => 1})
+          should_not_receive(:fetch).with(format, :update, {})
+          should_receive(:fetch).exactly(1).times.with(format, :destroy, {:id => 1  })
+        end       
+        @resp.should_receive(:success?).exactly(16).and_return(false)
+        assert_mapping
+      end
+
+      it 'should only tests specified formats when given' do 
+        @action_mapping = {} #no mappings set
+        @test_formats = [:html, :json]
+
+        [:html, :json].each do |format|
+          should_receive(:fetch).exactly(1).times.with(format, :index, {})
+          should_receive(:fetch).exactly(1).times.with(format, :show, {:id => 1})
+          should_receive(:fetch).exactly(1).times.with(format, :new, {})
+          should_receive(:fetch).exactly(1).times.with(format, :create,  {:test_object => {:name => nil, :text => nil} })
+          should_receive(:fetch).exactly(1).times.with(format, :edit, {:id => 1})
+          should_receive(:fetch).exactly(1).times.with(format, :update, {:test_object => {:name => nil, :text => nil}, :id => 42})
+          should_receive(:fetch).exactly(1).times.with(format, :destroy, {:id => 1  })
+        end       
+
+        [:xml, :ajax].each do |format|
+          should_not_receive(:fetch).with(format, :index, {})
+          should_not_receive(:fetch).with(format, :show, {:id => 1})
+          should_not_receive(:fetch).with(format, :new, {})
+          should_not_receive(:fetch).with(format, :create,  {:test_object => {:name => nil, :text => nil} })
+          should_not_receive(:fetch).with(format, :edit, {:id => 1})
+          should_not_receive(:fetch).with(format, :update, {:test_object => {:name => nil, :text => nil}, :id => 42})
+          should_not_receive(:fetch).with(format, :destroy, {:id => 1  })
+        end       
+
+        @resp.should_receive(:success?).exactly(14).and_return(false)
+        assert_mapping
+      end
+    
+    end    
+  end
 end
