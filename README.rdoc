@@ -1,46 +1,22 @@
-=DeceptiCon
-Simplify and DRY your Rails controller specs by automating the simple response tests, leaving you free to test the important aspects.
+=DeceptiCon 
+===<b>D</b>ont' <b>E</b>ndure <b>C</b>oding <b>E</b>ndless res<b>P</b>onse <b>T</b>ests <b>I</b>n <b>CON</b>trollers
 
-Still a work in progress.  More changes and more docs to come.
+DeceptiCon allows you to write basic response tests as a simple mapping between action/format and expected response.
+* Simplify your Rails controller specs by generating the simple response tests 
+* Reduce the amount of repetitive test code needed.  
+* Write Controller specs which your boss can read!
+
+Still a work in progress.  More changes, tests and docs to come soon.
 
 
-==Does this apply to you?
-
-* Your controllers have only seven deadly methods [:index, :show, :new, :create, :edit, :update, :destroy]
-* Your routes are resourceful and the actions map to the expected CRUD actions - http://guides.rubyonrails.org/routing.html#crud-verbs-and-actions
-* Your controller actions respond_to :html, :js, :xml or :json.  Some actions respond_to all formats, some respond to a few and some actions are completely blocked.
-* Your controller tests are so similar you get double vision looking at them
-* You want to simply test the basic <tt>should be_success</tt> or <tt>should_not be_success</tt> assertions for each action and each format (at least html and js).
-  * but you're basically writing the same tests over and over for each controller and each action,
-  * it takes at least 10 lines of controller_spec to test just one action with two formats, ie;
-
-      describe "show"
-        it 'should be available with HTML' do
-          get, :show, {:id => @valid_object.id}
-          response.should be_success
-        end
-        it 'should be unavailable with JS' do
-          xhr :get, :show, {:id => @valid_object.id}
-          response.should_not be_success
-        end
-      end
-    Just testing the basic responses to html and js to each action is going to take at least 70 lines!
-
-* You just want to focus on testing the interesting behaviors of your controllers and leave this repetitive stuff to a robot!
-* Controller testing is so boring and repetitive it makes you cry.
-
-==DRY your eyes
-Here is a controller_spec which tests the html and js (ajax) responses to each of the seven actions and asserts if the response should be successful or not.
+==Reduced Controller Test Code
 
   require 'spec_helper'
   describe NotesController do
-    before(:each) do
-      #whatever....
-    end
+    @test_formats = [:html, :ajax] #by default :xml and :json would also be included. :ajax == :js
 
-    @test_formats = [:html, :ajax] #by default :xml and :json would also be included
-    @action_mapping = { #mapping of action-format to expectation
-      :index => {:html => true,  :ajax => false}, #:ajax == :js
+    @action_mapping = { 
+      :index => {:html => true,  :ajax => false},
       :show =>  {:html => true,  :ajax => false},
       :new =>   {:html => false, :ajax => true},
       :create =>{:html => false, :ajax => true},
@@ -48,54 +24,109 @@ Here is a controller_spec which tests the html and js (ajax) responses to each o
       :update =>{:html => true,  :ajax => true},
       :destroy=>{:html => false, :ajax => false},
     }
+    
     assert_mapping #generate tests which describe the above expectations.
 
     it 'should leave me free to now test the important details'
   end
 
+This controller spec results in 14 tests; two tests for each action for each format (:html and :js).  
+Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value.
+The tests also make assumptions about the params to send in the requests, based on which action is being called (see later for details).
 
-===What's going on here then?
-Two tests have been generated for each of the seven controller actions to test their response to both html and js requests.
-Each of the 14 generated tests attempts to make the appropriate request and asserts if it should be_success or not.
+==UseCase
 
-Each of the tests for html, xml and json requests uses the appropriate test method (`get, put, post and delete`) and changes the format by setting <tt>@request.env['HTTP_ACCEPT']</tt>, ie;
-  @request.env['HTTP_ACCEPT'] = "application/json" #for json request
+Every one of your controllers is 100% resourceful, they either provide just the seven deadly actions (:index, :show, :new, :create, :edit, :update, :destroy) or a subset.
+All you controller actions are wrapped in respond_to blocks and the different formats (:html, :js, :xml and :json) will result in different outcomes.
 
-Test for js requests use the `xhr` method which takes :get, :put, :post or :delete as its first arg.
+Ideally you should test each of the seven actions on each controller and you should probably test each format against each action.  So that is at least 28 tests per controller.
+In the end, especially as a lot of the controllers only fulfill a subset of the seven actions and primarily only respond to :html and :js requests, you only test the actions which are significant.
+
+The aim of DeceptiCon is to enable a very quick, blanket set of tests which cover every action with every format and simply make assertions about the responses' status code.
+
+For example if you had a controller that only provides the index action to certain users but allows other users the show action too, then you can just write; 
+  
+  describe NotesController do
+    describe "for logged OUT user" do 
+      before(:each) { #logOut user }
+      @action_mapping = { :index => {:html => true } } #only include the actions expected to be successful.
+      assert_mapping 
+    end   
+    describe "for logged IN user" do 
+      before(:each) { #logIn user }
+      @action_mapping = { 
+        :index => {:html => true },
+        :show =>  {:html => true,  :ajax => true}
+      }
+      assert_mapping 
+    end         
+  end
+
+This would test that a logged out user is only get a successful response from the index action with an html request.  
+All other formats (:js, :xml, :json) should not be successful to index and none of the other actions should be successful with either format.
+It then tests that a logged in user can also access the show action with either html or js requests, but all other actions are still blocked.
+
+This is NOT designed to replace other controller tests, merely to make it dead easy to test the blocked actions, freeing you to test the more interesting stuff.
+You should now include further tests to assert what is assigned etc, but you only need to focus on the required actions.  
+
+
+===Assumptions about params
+By default DeceptiCon will make tests to hit each of the seven actions (you can exclude actions - see options later) and it therefore needs to have appropriate data in the params.
 
 For each of the actions it makes assumptions about what to include in the params of the request.
 * In the case of :index and :new no params are supplied in the request. ie; <tt>params = {}</tt>
-* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => "foo"}}</tt>
-* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => "bar"}, :id => 1}</tt>
+* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => nil}}</tt>
+* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => nil}, :id => 1}</tt>
 * All other actions (:show, :edit, :destroy) just get an :id.           ie; <tt>params = {:id => 1}</tt>
 
+In order to populate the params with an id and attributes the tests need to be able to construct an appropriate valid object.
+The valid object can then be returned by the controller and in the case of the create action the class has :new stubbed to return the valid_object.
+See more in Setup about this.
 
-====Important Prerequisite
-For all the actions, aside from :index and :new, the test needs to construct a test object to be used in the controller.
+
+==Setup
+First add the gem to your Gemfile (probably in the :test and :development groups);
+  group :test, :development do
+    gem 'decepticon'
+  end
+DeceptiCon is not available on Rubygems yet.  You need to clone this repo and then build and install the gem locally like this;
+  git clone git@github.com:Sujimichi/DeceptiCon.git && cd DeceptiCon && rake build && rake install
+
+Then include it in your spec_helper (or in a specific controller)
+  include DeceptiCon
+
+In each of the controller_specs you want to use it in you must add an <tt>@action_mapping</tt> variable to define the expectations and add a call to +assert_mapping+
+See more about defining the <tt>@action_mapping</tt> in Usage
+
+Finally, you must define a Factory or 'valid_object' method to return a valid object for each controller, ie a valid instance of Note for the NotesController.
+
+====Factories and valid_objects
+Each controller will probably be expecting to do actions on the object class of its name, ie Note for NotesController.
+For all the actions, aside from :index and :new, DeceptiCon needs to be able to create a valid instance of that object so it can send its id and or attributes in the request params.
 If you have Factories set up it will use <tt>Factory.build(class_name)</tt>.
-It also allows you to have <tt>valid_object</tt> methods ie; +valid_note+ or +valid_user_comment+ to return an object.
-It will use a valid_object method in preference to a Factory if both are available.
-The class of the object is derived from the controller name, but can be over-ridden (see settings).
 
+It also allows you to have <tt>valid_object</tt> methods ie; +valid_note+ or +valid_user_comment+ to return an object.  A valid_object method will be used in preference to a Factory if both are available.
+The class of the object is derived from the controller name, but can be over-ridden (see settings).
 
 It is the expectation that an object returned by either a Factory or a valid_object method will return true for <tt>.valid?</tt>
 If it can't find a Factory or valid_object method it will attempt to create an object and populate its attributes (with string or ints) to try to make it valid but this only work for objects with very simple validations.
 
-Once the request is made it calls either <tt>response.should be_success or response.should_not be_success</tt> depending on the value given for the particular action and format.
-As well as just true and false you can also use :redirect ie;
-  :edit => {:html => :redirect, :ajax => false}
 
-At some point I will also add the ability to pass status codes in for more granular control.
+==Usage
+In the controller_specs which you want DeceptiCon to generate tests for, you need to define an <tt>@action_mapping</tt> variable.  
+It should be defined inside a describe block, but *not* inside a +before+ filter.
 
-The generation of the tests is done by the +assert_mapping+ method in the DeceptiCon module which needs to be included in the spec_helper.  See Setup later for complete instructions.
+@action_mapping is a map of controller actions and request formats to the expectations for responses in the form of a hash.  
+Each action is represented by a key which entails another hash that defines formats and corresponding expectations for <tt>response.success?</tt> ie;
+  {:action => {:format_a => <expectation>, :format_b => <expectation>}}
 
-====example of generated tests
-  it "should respond to index:html"
-  it "should respond to new:ajax"
-  it "should NOT respond to new:html"
+The formats can be :html, :ajax, :xml and :json (:js and :ajax can be used synonymously)
+The expectations can be either +true+, +false+ or +:redirect+.  (I will extend it to take status codes soon)
+
 
 ====Be Lazy
-You only need to define the mapping for actions which have the expectation of a successful response.  The others will be assumed to expect an unsuccessful response.
+Only the actions and formats that have the expectation of a successful response need to be defined. However including them is more expressive to any reader.
+Any action/format which is not included will be considered to not have a successful response.  
 
   @action_mapping = { :index => {:html => true} }
 
@@ -103,46 +134,24 @@ Without other options (see later), using the above action_mapping would result i
 By default all four formats (html, js, xml, json) are tested for all seven actions.
 You can adjust this for all controllers or just for the current.  See more in Options later.
 
-==Setup
-First add the gem to your Gemfile (probably in the :test and :development groups);
-  group :test, :development do
-    gem 'decepticon'
-  end
-
-DeceptiCon is not available on Rubygems yet.  You need to clone this repo and then build and install the gem;
-  git clone git@github.com:Sujimichi/DeceptiCon.git && cd DeceptiCon && rake build && rake install
-
-Then include it in your spec_helper (or in a specific controller)
-  include DeceptiCon
 
 
-In each controller_spec you need to define an <tt>@action_mapping</tt> variable.  It should be defined inside a describe block, but *not* inside a +before+ filter.  It is a map of controller actions and request formats to expectations for responses.  It is written as a hash with a key for each action entailing a sub hash defining formats and coresponding expecations for response.success?.
-  {:action => {:format => expectation of request}
 
-The expectation of the request is either +true+, +false+ or +:redirect+.  (I will extend it to take status codes)
-Any action which is not included will be considered to not have successful responses to either format.
-
-   @action_mapping = { 
-     :index => {:html => true,  :ajax => false}, 
-     :new =>  {:html => false,  :ajax => true},
-     :create => {:html => :redirect,  :ajax => false}
-    }
+====example of generated tests
+  it "should respond to index:html"
+  it "should respond to new:ajax"
+  it "should NOT respond to new:html"
+  it "should redirect requests to edit:html"
 
 
-After the <tt>@action_mapping</tt> add a call to a method from the DeceptiCon module
-  assert_mapping
 
-Finally (I know, this is a _lot_ of work) make sure you have a Factory ready for the given object class
-  Factory.define(:note) { |f| f.text "some text" }
 
-Now run your specs
 
 ==Options
 By Default all seven actions will be tested for all four formats, you might not want this.
 
 You can set which formats are tested for all controllers by adding a $default_test_formats array where you require and include DeceptiCon in the spec_helper.  Note, this var needs to be set before it is included.
   $default_test_formats = [:html, :ajax] #limit to just :html and :ajax formats
-  require 'decepticon'
   include DeceptiCon
 
 You can also control which formats to test on a per-controller basis by including a @test_formats array alongside the @action_mapping.
