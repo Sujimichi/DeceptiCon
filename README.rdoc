@@ -34,21 +34,6 @@ This controller spec results in 14 tests; two tests for each action for each for
 Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value (also takes :redirect and will soon take status codes).
 The tests also make assumptions about the params to send in the requests, based on which action is being called (see later for details).
 
-====Assumptions about params
-By default DeceptiCon will make tests to hit each of the seven actions (you can exclude actions - see options later) and it therefore needs to have appropriate data in the params.
-
-For each of the actions it makes assumptions about what to include in the params of the request.
-* In the case of :index and :new no params are supplied in the request. ie; <tt>params = {}</tt>
-* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => nil}}</tt>
-* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => nil}, :id => 1}</tt>
-* All other actions (:show, :edit, :destroy) just get an :id.           ie; <tt>params = {:id => 1}</tt>
-
-You can pass in other data to go the params, see Extending the params later.
-
-In order to populate the params with an id and attributes the tests need to be able to construct an appropriate valid object.
-The valid object can then be returned by the controller and in the case of the create action the class has :new stubbed to return the valid_object.
-See more in Setup about this.
-
 
 ==UseCase
 
@@ -86,6 +71,27 @@ This is NOT designed to replace other controller tests, merely to make it dead e
 You should now include further tests to assert what is assigned etc, but you only need to focus on the required actions.  
 
 
+====Assumptions about params
+By default DeceptiCon will make tests to hit each of the seven actions (you can exclude actions - see options later) and it therefore needs to have appropriate data in the params.
+
+For each of the actions it makes assumptions about what to include in the params of the request.
+* In the case of :index and :new no params are supplied in the request. ie; <tt>params = {}</tt>
+* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => nil}}</tt>
+* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => nil}, :id => 1}</tt>
+* All other actions (:show, :edit, :destroy) just get an :id.           ie; <tt>params = {:id => 1}</tt>
+
+You can pass in other data to go the params, see Extending the params later.
+
+In order to populate the params with an id and attributes the tests need to be able to construct an appropriate valid object.
+The valid object can then be returned by the controller and in the case of the create action the class has :new stubbed to return the valid_object.
+See more in Setup about this.
+
+
+====example of generated tests
+  it "should respond to index:html"
+  it "should respond to new:ajax"
+  it "should NOT respond to new:html"
+  it "should redirect requests to edit:html"
 
 
 
@@ -128,6 +134,17 @@ Each action is represented by a key which entails another hash that defines form
 The formats can be :html, :ajax, :xml and :json (:js and :ajax can be used synonymously)
 The expectations can be either +true+, +false+ or +:redirect+.  (I will extend it to take status codes soon)
 
+After each definition of @action_mapping add a call to +assert_mapping+, ie;
+
+  describe "this" do 
+    @action_mapping = { :index => {:html => true, :ajax => false} }
+    assert_mapping
+  end
+  describe "that" do 
+    @action_mapping = { :index => {:html => false, :ajax => true} }
+    assert_mapping
+  end
+
 
 ====Be Lazy
 Only the actions and formats that have the expectation of a successful response need to be defined. However including them is more expressive to any reader.
@@ -141,21 +158,10 @@ You can adjust this for all controllers or just for the current.  See more in Op
 
 
 
-
-====example of generated tests
-  it "should respond to index:html"
-  it "should respond to new:ajax"
-  it "should NOT respond to new:html"
-  it "should redirect requests to edit:html"
-
-
-
-
-
 ==Options
 By Default all seven actions will be tested for all four formats, you might not want this.
 
-You can set which formats are tested for all controllers by adding a $default_test_formats array where you require and include DeceptiCon in the spec_helper.  Note, this var needs to be set before it is included.
+You can set which formats are tested for all controllers by adding a $default_test_formats array where you include DeceptiCon in the spec_helper.  Note, this var needs to be set before it is included.
   $default_test_formats = [:html, :ajax] #limit to just :html and :ajax formats
   include DeceptiCon
 
@@ -191,6 +197,7 @@ Note the args being passed to the create action; <tt>:args => {:user_id => "vali
 The <tt>valid_user.id</tt> is a string not a method or variable.  Before additional params are added any which are strings are eval'd.
 This allows methods and variables to be called in the scope of the test (could not make work with Procs).  Its not ideal.
 
+
 ==Other Stuff
 As well as the main +assert_mapping+ method the DeceptiCon class also provides another method called +fetch+.
 This is used to unify the way you make requests to different formats.
@@ -220,7 +227,7 @@ So now you can write
 get, post etc can take four args
   get(:show, {'id' => "12"}, {'user_id' => 5}, {'message' => 'booya!'})
 
-fetch passes the four args
+fetch take five args and passes the last four on.  Only the first two are required. 
   fetch(:html, :show, {'id' => "12"}, {'user_id' => 5}, {'message' => 'booya!'})
 
 
