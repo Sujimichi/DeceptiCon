@@ -31,8 +31,24 @@ Still a work in progress.  More changes, tests and docs to come soon.
   end
 
 This controller spec results in 14 tests; two tests for each action for each format (:html and :js).  
-Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value (also takes :redirect and will soon also take status codes).
+Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value (also takes :redirect and will soon take status codes).
 The tests also make assumptions about the params to send in the requests, based on which action is being called (see later for details).
+
+====Assumptions about params
+By default DeceptiCon will make tests to hit each of the seven actions (you can exclude actions - see options later) and it therefore needs to have appropriate data in the params.
+
+For each of the actions it makes assumptions about what to include in the params of the request.
+* In the case of :index and :new no params are supplied in the request. ie; <tt>params = {}</tt>
+* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => nil}}</tt>
+* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => nil}, :id => 1}</tt>
+* All other actions (:show, :edit, :destroy) just get an :id.           ie; <tt>params = {:id => 1}</tt>
+
+You can pass in other data to go the params, see Extending the params later.
+
+In order to populate the params with an id and attributes the tests need to be able to construct an appropriate valid object.
+The valid object can then be returned by the controller and in the case of the create action the class has :new stubbed to return the valid_object.
+See more in Setup about this.
+
 
 ==UseCase
 
@@ -70,18 +86,7 @@ This is NOT designed to replace other controller tests, merely to make it dead e
 You should now include further tests to assert what is assigned etc, but you only need to focus on the required actions.  
 
 
-===Assumptions about params
-By default DeceptiCon will make tests to hit each of the seven actions (you can exclude actions - see options later) and it therefore needs to have appropriate data in the params.
 
-For each of the actions it makes assumptions about what to include in the params of the request.
-* In the case of :index and :new no params are supplied in the request. ie; <tt>params = {}</tt>
-* For :create the params include attributes for the appropriate object. ie; <tt>params = {:note => {:text => nil}}</tt>
-* For :update the params include attributes for the object and an :id.  ie; <tt>params = {:note => {:text => nil}, :id => 1}</tt>
-* All other actions (:show, :edit, :destroy) just get an :id.           ie; <tt>params = {:id => 1}</tt>
-
-In order to populate the params with an id and attributes the tests need to be able to construct an appropriate valid object.
-The valid object can then be returned by the controller and in the case of the create action the class has :new stubbed to return the valid_object.
-See more in Setup about this.
 
 
 ==Setup
