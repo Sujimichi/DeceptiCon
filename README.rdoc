@@ -31,7 +31,7 @@ Still a work in progress.  More changes, tests and docs to come soon.
   end
 
 This controller spec results in 14 tests; two tests for each action for each format (:html and :js).  
-Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value.
+Each test uses the appropriate request methods from rspec-rails( get, post, put, delete and xhr) and makes assertion on the response depending on the true/false value (also takes :redirect and will soon also take status codes).
 The tests also make assumptions about the params to send in the requests, based on which action is being called (see later for details).
 
 ==UseCase
