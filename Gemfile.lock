@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    decepticon (0.1.1)
+    decepticon (0.1.2)
 
 GEM
   remote: http://rubygems.org/
@@ -24,3 +24,6 @@ DEPENDENCIES
   ZenTest
   decepticon!
   rspec
+
+BUNDLED WITH
+   1.11.2

@@ -54,7 +54,7 @@ module DeceptiCon
       params = {:id => 1} unless valid_obj && expected_outcome #If the controller is for a non DB resource (so no valid_obj) and the expected_outcome is false, then just use '1' for the :id
     end
     if action.eql?(:create) #create requires that the params have the object included ie {:entity => {attributes} }
-      object_class.stub!(:new => valid_obj) if valid_obj  #force the return of a valid object from Object.new
+      object_class.stub(:new => valid_obj) if valid_obj  #force the return of a valid object from Object.new
       params = {class_name.to_sym => object_class.new.attributes} unless object_class.nil? #include attributes for the object in the params 
     end
     if action.eql?(:update) #upate requires both an :id and the object attributes to update.
@@ -71,7 +71,14 @@ module DeceptiCon
     if expected_outcome.eql?(:redirect)
       assert_response(:redirect) 
     else
-      expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
+      code = 200
+      code = mapping[:html_args][:expect] if format.eql?(:html) && mapping[:html_args] && mapping[:html_args][:expect]
+
+      if (expected_outcome.eql?(true) && !response.status.eql?(code)) || (expected_outcome.eql?(false) && response.status.eql?(code))
+        msg = "Expected route to #{@controller.class.to_s}##{action}:#{format} to #{expected_outcome ? 'be successful' : 'fail'} - (#{code}). Got #{response.status}"
+        raise msg
+      end
+      #expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
     end          
 
   end
