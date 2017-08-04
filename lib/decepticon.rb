@@ -76,6 +76,8 @@ module DeceptiCon
 
       if (expected_outcome.eql?(true) && !response.status.eql?(code)) || (expected_outcome.eql?(false) && response.status.eql?(code))
         msg = "Expected route to #{@controller.class.to_s}##{action}:#{format} to #{expected_outcome ? 'be successful' : 'fail'} - (#{code}). Got #{response.status}"
+        msg << "\n#{params}"
+        msg << "\n#{response.body}"
         raise msg
       end
       #expected_outcome.eql?(true) ? (response.should be_success) : (response.should_not be_success) #make assertion on the response.  
